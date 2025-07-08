@@ -22,7 +22,13 @@
     },
 
     "ServerPackages": {
-      "$path": "ServerPackages"
+      "$path": "ServerPackages",
+      "_Index": {
+        "$path": "ServerPackages/_Index",
+        "firebird702_profileservice@1.1.0": {
+          "$path": "ServerPackages/_Index/firebird702_profileservice@1.1.0"
+        }
+      }
     },
 
     "StarterPlayer": {
