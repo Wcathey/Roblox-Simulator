@@ -9,7 +9,7 @@ local ProfileService = require(game.ServerPackages.ProfileService)
 local PlayerDataService = {}
 
 local ProfileTemplate = {
-	Cash = 0,
+	Cash = 100000,
 	Level = 1,
 	XP = 0,
 	Rebirths = 0,
@@ -95,6 +95,13 @@ function PlayerDataService:GiveCash(player, amount)
 	local profile = Profiles[player]
 	if profile then
 		profile.Data.Cash += amount
+	end
+end
+
+function PlayerDataService:UpdateData(player, key, value)
+	local profile = Profiles[player]
+	if profile then
+		profile.Data[key] = value
 	end
 end
 
