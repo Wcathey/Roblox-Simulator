@@ -1,27 +1,24 @@
--- src/Client/StartupGui.client.lua
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
+local RemoteFunctions = ReplicatedStorage:WaitForChild("RemoteFunctions")
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Real check for new player via RemoteFunction
 local isNewPlayer = false
 local success, result = pcall(function()
-	local remote = ReplicatedStorage:WaitForChild("NewPlayerCheck")
-	return remote:InvokeServer()
+	local newPlayerCheckFunction = RemoteFunctions:WaitForChild("NewPlayerCheck")
+	return newPlayerCheckFunction:InvokeServer()
 end)
+
 if success and result then
 	isNewPlayer = true
 end
 
--- Require the cars dataset (make sure this module exists at ReplicatedStorage.Shared.CarsData)
 local CarsData = require(ReplicatedStorage.Shared.Cars.CarsData)
-local StarterCarSelectedEvent = ReplicatedStorage:WaitForChild("StarterCarSelected")
+local StarterCarSelectedEvent = RemoteEvents:WaitForChild("StarterCarSelected")
 
--- === CREATE LOADING SCREEN ===
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "StartupGui"
 screenGui.ResetOnSpawn = false
@@ -62,7 +59,7 @@ subtitle.Position = UDim2.new(0, 0, 0.5, 0)
 subtitle.TextScaled = true
 subtitle.Parent = mainFrame
 
-function createCarSelectionPopup()
+local function createCarSelectionPopup()
 	local carGui = Instance.new("ScreenGui")
 	carGui.Name = "CarSelectionPopup"
 	carGui.Parent = playerGui
@@ -111,14 +108,13 @@ function createCarSelectionPopup()
 
 		button.MouseButton1Click:Connect(function()
 			print("Selected car:", car.Name)
-			StarterCarSelectedEvent:FireServer(car.Id) -- send car Id to server
+			StarterCarSelectedEvent:FireServer(car.Id)
 			carGui:Destroy()
 		end)
 	end
 end
 
--- === WELCOME POPUP GUI ===
-local function createWelcomePopup()
+local function createWelcomePopup(onContinue)
 	local welcomeGui = Instance.new("ScreenGui")
 	welcomeGui.Name = "WelcomePopup"
 	welcomeGui.Parent = playerGui
@@ -174,23 +170,12 @@ local function createWelcomePopup()
 
 	continue.MouseButton1Click:Connect(function()
 		welcomeGui:Destroy()
-		createCarSelectionPopup()
-	end)
-
-	-- Allow clicking outside to close
-	popup.Active = true
-	popup.Draggable = true
-	welcomeGui.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 and not popup:IsDescendantOf(input.Target) then
-			welcomeGui:Destroy()
+		if onContinue then
+			onContinue()
 		end
 	end)
 end
 
--- === STARTER CAR SELECTION POPUP GUI ===
-
-
--- === HELP ICON (Always Visible) ===
 local function createHelpIcon()
 	local helpGui = Instance.new("ScreenGui")
 	helpGui.Name = "HelpIcon"
@@ -212,10 +197,11 @@ local function createHelpIcon()
 	helpCorner.CornerRadius = UDim.new(0, 10)
 	helpCorner.Parent = button
 
-	button.MouseButton1Click:Connect(createWelcomePopup)
+	button.MouseButton1Click:Connect(function()
+		createWelcomePopup()
+	end)
 end
 
--- === Fade out loading screen ===
 task.delay(3, function()
 	local tween = TweenService:Create(mainFrame, TweenInfo.new(1.5), {
 		BackgroundTransparency = 1
@@ -224,9 +210,10 @@ task.delay(3, function()
 
 	for _, child in ipairs(mainFrame:GetChildren()) do
 		if child:IsA("TextLabel") then
-			TweenService:Create(child, TweenInfo.new(1.5), {
+			local textTween = TweenService:Create(child, TweenInfo.new(1.5), {
 				TextTransparency = 1
-			}):Play()
+			})
+			textTween:Play()
 		end
 	end
 
@@ -234,7 +221,7 @@ task.delay(3, function()
 		screenGui:Destroy()
 		createHelpIcon()
 		if isNewPlayer then
-			createWelcomePopup()
+			createWelcomePopup(createCarSelectionPopup)
 		end
 	end)
 end)

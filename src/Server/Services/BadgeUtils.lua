@@ -1,11 +1,11 @@
 local BadgeService = game:GetService("BadgeService")
-
-local BadgesData = require(script.Parent.BadgesData)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BadgesData = require(ReplicatedStorage.Shared.Badges.BadgesData)
 
 local BadgeUtils = {}
 
 -- Awards a badge if the player doesn't already have it
-function BadgeUtils:AwardBadgeForCar(player, carId)
+function BadgeUtils:AwardCarBadge(player, carId)
 	if not player or not carId then return end
 
 	local badgeInfo = BadgesData[carId]

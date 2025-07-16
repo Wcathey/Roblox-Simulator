@@ -1,4 +1,14 @@
--- Server/init.server.lua
+-- src/Server/init.server.lua
 
-require(script.Services.PlayerDataService)
-print("PlayerDataService loaded successfully.")
+print("[InitServer] Starting server initialization...")
+
+-- Require the CrateService module
+local CrateService = require(script.Services.CrateService)
+
+print("[InitServer] CrateService initialized.")
+
+-- Optionally, you can expose CrateService globally or return it
+-- For example:
+-- _G.CrateService = CrateService
+-- or
+-- return CrateService

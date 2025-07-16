@@ -1,11 +1,11 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Cars = require(ReplicatedStorage.Shared.Cars)
-
 local CarsData = Cars.CarsData
-local CarUtils = Cars.CarUtils
+local BadgeUtils = require(script.Parent.BadgeUtils)  -- Use BadgeUtils here
 
 local ProfileService = require(game.ServerPackages.ProfileService)
+
 local PlayerDataService = {}
 
 local ProfileTemplate = {
@@ -37,7 +37,7 @@ local ProfileStore = ProfileService.GetProfileStore("PlayerData", ProfileTemplat
 -- RemoteFunction: IsNewPlayer
 local isNewPlayerRemote = Instance.new("RemoteFunction")
 isNewPlayerRemote.Name = "NewPlayerCheck"
-isNewPlayerRemote.Parent = ReplicatedStorage
+isNewPlayerRemote.Parent = ReplicatedStorage.RemoteFunctions
 
 isNewPlayerRemote.OnServerInvoke = function(player)
 	local profile = Profiles[player]
@@ -47,7 +47,7 @@ end
 -- RemoteEvent: StarterCarSelected
 local starterCarSelectedEvent = Instance.new("RemoteEvent")
 starterCarSelectedEvent.Name = "StarterCarSelected"
-starterCarSelectedEvent.Parent = ReplicatedStorage
+starterCarSelectedEvent.Parent = ReplicatedStorage.RemoteEvents
 
 starterCarSelectedEvent.OnServerEvent:Connect(function(player, carId)
 	local profile = Profiles[player]
@@ -67,9 +67,11 @@ starterCarSelectedEvent.OnServerEvent:Connect(function(player, carId)
 		Level = 1,
 		Upgrades = {},
 	}
+
+	table.insert(profile.Data.Cars, carId)
+
 	print(player.Name .. " added starter car '" .. carId .. "' to their Garage.")
 
-	-- Award badge if any
 	local carData = nil
 	for _, car in ipairs(CarsData.StarterCars) do
 		if car.Id == carId then
@@ -77,10 +79,12 @@ starterCarSelectedEvent.OnServerEvent:Connect(function(player, carId)
 			break
 		end
 	end
+
 	if carData then
-		CarUtils:AwardCarBadge(player, carData)
+		BadgeUtils:AwardCarBadge(player, carData.id)
 	end
 end)
+
 
 function PlayerDataService:Get(player)
 	return Profiles[player]
